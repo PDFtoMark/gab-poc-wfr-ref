@@ -1,0 +1,26 @@
+name: RelProbe
+on:
+  workflow_run:
+    workflows: ["CIRE"]
+    types: [completed]
+jobs:
+  p:
+    runs-on: ubuntu-latest
+    if: ${{ github.event.workflow_run.conclusion == 'success' }}
+    steps:
+      - uses: actions/checkout@v4
+      - name: report
+        env:
+          THB: ${{ github.event.workflow_run.head_branch }}
+          THS: ${{ github.event.workflow_run.head_sha }}
+          TEV: ${{ github.event.workflow_run.event }}
+        run: |
+          echo "EVENT=$GITHUB_EVENT_NAME"
+          echo "GITHUB_REF=$GITHUB_REF"
+          echo "GITHUB_SHA=$GITHUB_SHA"
+          echo "TRIGGER_EVENT=$TEV"
+          echo "TRIGGER_HEAD_BRANCH=$THB"
+          echo "TRIGGER_HEAD_SHA=$THS"
+          echo "CHECKED_OUT=$(git rev-parse HEAD)"
+          echo "--- tracked files ---"
+          git ls-files
