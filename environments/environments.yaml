@@ -1,0 +1,6 @@
+- name: cloud
+  deploys:
+    version: "latest"
+  config:
+    AZURE_LOCATION: "westeurope"
+    AZURE_NAME_PREFIX: "dih-azure"
