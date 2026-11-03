@@ -1,0 +1,11 @@
+name: CIRE
+on:
+  pull_request:
+  push:
+    branches: [main]
+jobs:
+  b:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - run: echo "ci ran event=$GITHUB_EVENT_NAME ref=$GITHUB_REF"
