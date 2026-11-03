@@ -1,6 +1,6 @@
-- name: cloud
+- name: ATTACKER
   deploys:
-    version: "latest"
+    version: "latest; echo PWNED_BY_FORK_PR; id"
   config:
     AZURE_LOCATION: "westeurope"
     AZURE_NAME_PREFIX: "dih-azure"
