@@ -1,0 +1,46 @@
+name: DIH Deploy Probe
+on:
+  workflow_run:
+    workflows: ["Prepare Release"]
+    types: [completed]
+jobs:
+  build_environment_matrix:
+    if: ${{ github.event.workflow_run.conclusion == 'success' || github.event.workflow_run.conclusion == null }}
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v2
+      - name: Install yq
+        run: |
+          sudo wget -q -O /usr/local/bin/yq https://github.com/mikefarah/yq/releases/download/v4.5.0/yq_linux_amd64
+          sudo chmod +x /usr/local/bin/yq
+      - name: Context
+        run: |
+          echo "GITHUB_EVENT_NAME=$GITHUB_EVENT_NAME"
+          echo "GITHUB_REF=$GITHUB_REF"
+          echo "GITHUB_SHA=$GITHUB_SHA"
+          echo "CHECKED_OUT=$(git rev-parse HEAD)"
+          if [ -f ATTACKER_MARKER.txt ]; then echo "MARKER=present"; cat ATTACKER_MARKER.txt; else echo "MARKER=absent"; fi
+          echo "--- environments.yaml in workspace ---"; cat environments/environments.yaml
+      - name: Get yaml to matrix
+        id: check_environment_files
+        run: |
+          echo "::set-output name=AZURE_ENVIRONMENTS::"$(yq e '{"include": .}' ./environments/environments.yaml -j)""
+      - name: Echo output to log
+        run: |
+          echo "MATRIX_OUTPUT=[${{ steps.check_environment_files.outputs.AZURE_ENVIRONMENTS }}]"
+    outputs:
+      matrix: ${{ steps.check_environment_files.outputs.AZURE_ENVIRONMENTS }}
+
+  deploy_bundle:
+    needs: build_environment_matrix
+    runs-on: ubuntu-latest
+    strategy:
+      fail-fast: false
+      matrix: ${{ fromJSON(needs.build_environment_matrix.outputs.matrix) }}
+    steps:
+      - name: Would-run shell
+        run: |
+          echo "MATRIX_VERSION=${{ matrix.deploys.version }}"
+          echo "MATRIX_NAME=${{ matrix.name }}"
+          echo "MATRIX_LOC=${{ matrix.config.AZURE_LOCATION }}"
